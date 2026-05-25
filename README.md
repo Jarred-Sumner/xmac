@@ -8,7 +8,7 @@ Downloads and extracts macOS SDKs straight from Apple's public CDN —
 no Apple ID, no Mac, no Xcode, and nothing redistributed.
 
 [![ci](https://github.com/jarred-sumner/xmac/actions/workflows/ci.yml/badge.svg)](https://github.com/jarred-sumner/xmac/actions/workflows/ci.yml)
-[![release](https://github.com/jarred-sumner/xmac/actions/workflows/release.yml/badge.svg)](https://github.com/jarred-sumner/xmac/releases/tag/latest)
+[![release](https://github.com/jarred-sumner/xmac/actions/workflows/release.yml/badge.svg)](https://github.com/jarred-sumner/xmac/releases)
 [![license: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#-license--legal)
 [![runtime: bun](https://img.shields.io/badge/runtime-bun%20%E2%89%A5%201.1-f9f1e1.svg)](https://bun.sh)
 
@@ -60,9 +60,9 @@ CI. You still have to accept Apple's license terms (`--accept-license`).
 
 ## 📦 Install
 
-**Prebuilt binary** (no runtime needed) — from the [rolling `latest`
-release](https://github.com/jarred-sumner/xmac/releases/tag/latest) or any versioned
-release:
+**Prebuilt binary** (no runtime needed) — every commit to `main` is published
+to [Releases](https://github.com/jarred-sumner/xmac/releases), tagged with its
+commit SHA, and the newest build is always marked Latest:
 
 ```sh
 # glibc (Ubuntu, Debian, Fedora, …)
@@ -71,6 +71,8 @@ curl -fsSL https://github.com/jarred-sumner/xmac/releases/latest/download/xmac-l
 curl -fsSL https://github.com/jarred-sumner/xmac/releases/latest/download/xmac-linux-x64-musl -o xmac
 chmod +x xmac
 ```
+
+To pin an exact build, replace `latest/download` with `download/<commit sha>`.
 
 **Or run from source** with [Bun](https://bun.sh) ≥ 1.1 — zero runtime
 dependencies, nothing to `bun install`:

@@ -1,8 +1,9 @@
 name: release
 
-# Every push to main rebuilds the standalone binaries and rolls the `latest`
-# release forward. Pushing a `v*` tag additionally cuts an immutable
-# versioned release with the same artifacts.
+# Every push to main publishes the standalone binaries as a release tagged
+# with the commit SHA, versioned `0.0.0-build-<run number>`, and marked as the
+# repository's Latest release so `releases/latest/download/...` always serves
+# the newest build. Pushing a `v*` tag cuts a normal versioned release.
 
 on:
   push:
@@ -47,16 +48,18 @@ jobs:
         working-directory: dist
         run: sha256sum xmac-* > SHA256SUMS
 
-      - name: Roll the `latest` release (every push to main)
+      - name: Publish build release (every push to main)
         if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete latest --yes --cleanup-tag || true
-          gh release create latest \
-            --title "latest (${GITHUB_SHA::7})" \
-            --notes "Rolling build of \`main\` at ${GITHUB_SHA}. For a stable download, use a versioned release." \
-            --prerelease \
+          version="0.0.0-build-${GITHUB_RUN_NUMBER}"
+          tag="${GITHUB_SHA::12}"
+          gh release create "$tag" \
+            --target "$GITHUB_SHA" \
+            --title "$version" \
+            --latest \
+            --notes "Automated build \`$version\` of commit ${GITHUB_SHA}." \
             dist/xmac-linux-x64 dist/xmac-linux-x64-musl dist/SHA256SUMS
 
       - name: Versioned release (tag push)
