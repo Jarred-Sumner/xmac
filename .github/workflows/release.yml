@@ -36,9 +36,12 @@ jobs:
           ./dist/xmac-linux-x64 --version
           ./dist/xmac-linux-x64 --help > /dev/null
 
+      # Bun's musl builds link libstdc++/libgcc dynamically, so the binary has
+      # the same runtime requirement as Bun itself on Alpine: apk add libstdc++.
       - name: Smoke-test the musl binary (Alpine container)
         run: |
-          docker run --rm -v "$PWD/dist:/dist" alpine:latest /dist/xmac-linux-x64-musl --version
+          docker run --rm -v "$PWD/dist:/dist" alpine:latest \
+            sh -ec 'apk add --no-cache --quiet libstdc++ libgcc && /dist/xmac-linux-x64-musl --version'
 
       - name: Checksums
         working-directory: dist

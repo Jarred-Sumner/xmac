@@ -67,7 +67,7 @@ release:
 ```sh
 # glibc (Ubuntu, Debian, Fedora, …)
 curl -fsSL https://github.com/jarred-sumner/xmac/releases/latest/download/xmac-linux-x64 -o xmac
-# musl (Alpine, distroless, …)
+# musl (Alpine — also needs: apk add libstdc++)
 curl -fsSL https://github.com/jarred-sumner/xmac/releases/latest/download/xmac-linux-x64-musl -o xmac
 chmod +x xmac
 ```

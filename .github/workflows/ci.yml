@@ -28,12 +28,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             clang lld llvm cmake ninja-build xz-utils bzip2
-          # Some distros only ship versioned lld binaries; make sure the
-          # unversioned ld64.lld the wrappers look for exists.
-          if ! command -v ld64.lld >/dev/null; then
-            v="$(compgen -c ld64.lld- | sort -V | tail -1)"
-            test -n "$v" && sudo ln -s "$(command -v "$v")" /usr/local/bin/ld64.lld
-          fi
+          # Ubuntu's lld/llvm packages only create unversioned symlinks for
+          # *some* tools (llvm-ar yes, llvm-lipo no). Create the missing ones
+          # from the highest versioned binary available.
+          for tool in ld64.lld llvm-ar llvm-ranlib llvm-lipo llvm-nm llvm-strip llvm-install-name-tool; do
+            if ! command -v "$tool" >/dev/null; then
+              v="$(compgen -c "$tool-" | grep -E "^${tool}-[0-9]+$" | sort -V | tail -1)"
+              if [ -n "$v" ]; then
+                sudo ln -sf "$(command -v "$v")" "/usr/local/bin/$tool"
+                echo "symlinked $tool -> $v"
+              fi
+            fi
+          done
 
       - name: Preflight — verify every required tool is present
         run: |
