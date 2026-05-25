@@ -37,12 +37,16 @@ jobs:
           wget -qO /tmp/llvm.sh https://apt.llvm.org/llvm.sh
           sudo bash /tmp/llvm.sh "$LLVM_VERSION"
           sudo apt-get install -y --no-install-recommends "llvm-$LLVM_VERSION" "lld-$LLVM_VERSION"
-          # apt.llvm.org installs versioned binaries only; create the
-          # unversioned names that xmac's wrappers and CMake toolchain expect.
+          # apt.llvm.org installs versioned binaries only, and the runner image
+          # already has an older /usr/bin/clang. Unconditionally point the
+          # unversioned names at the pinned version via /usr/local/bin, which
+          # precedes /usr/bin on PATH.
           for tool in clang clang++ ld64.lld llvm-ar llvm-ranlib llvm-lipo llvm-nm llvm-strip llvm-install-name-tool; do
-            if ! command -v "$tool" >/dev/null && command -v "$tool-$LLVM_VERSION" >/dev/null; then
+            if command -v "$tool-$LLVM_VERSION" >/dev/null; then
               sudo ln -sf "$(command -v "$tool-$LLVM_VERSION")" "/usr/local/bin/$tool"
               echo "symlinked $tool -> $tool-$LLVM_VERSION"
+            else
+              echo "::warning::$tool-$LLVM_VERSION not found"
             fi
           done
 
@@ -59,6 +63,13 @@ jobs:
           clang --version | head -1
           ld64.lld --version || true
           bun --version
+          # The macOS 26 SDK's libc++ needs clang >= 19; fail here with a
+          # clear message rather than in the C++ smoke tests.
+          major="$(clang --version | grep -oE '[0-9]+' | head -1)"
+          if [ "$major" -lt 19 ]; then
+            echo "::error::clang $major selected, but clang >= 19 is required for C++ against the newest SDKs"
+            exit 1
+          fi
 
       - name: Typecheck, lint, format check
         run: |
