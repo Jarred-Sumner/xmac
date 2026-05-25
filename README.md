@@ -65,11 +65,17 @@ to [Releases](https://github.com/jarred-sumner/xmac/releases), tagged with its
 commit SHA, and the newest build is always marked Latest:
 
 ```sh
-# glibc (Ubuntu, Debian, Fedora, …)
+# pick one of: xmac-linux-x64, xmac-linux-x64-musl, xmac-linux-arm64, xmac-linux-arm64-musl
+# (musl builds are for Alpine and also need: apk add libstdc++)
 curl -fsSL https://github.com/jarred-sumner/xmac/releases/latest/download/xmac-linux-x64 -o xmac
-# musl (Alpine — also needs: apk add libstdc++)
-curl -fsSL https://github.com/jarred-sumner/xmac/releases/latest/download/xmac-linux-x64-musl -o xmac
 chmod +x xmac
+```
+
+**Single-file JS bundle** (~66 KB) if you already have [Bun](https://bun.sh):
+
+```sh
+curl -fsSL https://github.com/jarred-sumner/xmac/releases/latest/download/xmac.js -o xmac.js
+bun xmac.js --help
 ```
 
 To pin an exact build, replace `latest/download` with `download/<commit sha>`.

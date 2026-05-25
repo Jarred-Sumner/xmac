@@ -26,9 +26,12 @@
   "scripts": {
     "xmac": "bun xmac.ts",
     "build": "bun build --compile --minify ./xmac.ts --outfile dist/xmac",
+    "build:js": "bun build --target=bun ./xmac.ts --outfile dist/xmac.js",
     "build:linux-x64": "bun build --compile --minify --target=bun-linux-x64 ./xmac.ts --outfile dist/xmac-linux-x64",
     "build:linux-x64-musl": "bun build --compile --minify --target=bun-linux-x64-musl ./xmac.ts --outfile dist/xmac-linux-x64-musl",
-    "build:all": "bun run build:linux-x64 && bun run build:linux-x64-musl",
+    "build:linux-arm64": "bun build --compile --minify --target=bun-linux-arm64 ./xmac.ts --outfile dist/xmac-linux-arm64",
+    "build:linux-arm64-musl": "bun build --compile --minify --target=bun-linux-arm64-musl ./xmac.ts --outfile dist/xmac-linux-arm64-musl",
+    "build:all": "bun run build:js && bun run build:linux-x64 && bun run build:linux-x64-musl && bun run build:linux-arm64 && bun run build:linux-arm64-musl",
     "test": "bun test ./test",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",

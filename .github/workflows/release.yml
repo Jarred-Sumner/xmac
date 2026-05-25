@@ -27,26 +27,43 @@ jobs:
         with:
           bun-version: latest
 
-      - name: Compile standalone binaries
+      - name: Build artifacts
         run: |
-          bun build --compile --minify --target=bun-linux-x64      ./xmac.ts --outfile dist/xmac-linux-x64
-          bun build --compile --minify --target=bun-linux-x64-musl ./xmac.ts --outfile dist/xmac-linux-x64-musl
+          # Single-file JS bundle, runnable with `bun xmac.js` (not minified so
+          # it stays auditable).
+          bun build --target=bun ./xmac.ts --outfile dist/xmac.js
+          # Standalone executables for every Linux target Bun cross-compiles to.
+          for target in linux-x64 linux-x64-musl linux-arm64 linux-arm64-musl; do
+            bun build --compile --minify --target="bun-$target" ./xmac.ts --outfile "dist/xmac-$target"
+          done
+          ls -la dist/
 
-      - name: Smoke-test the glibc binary
+      - name: Smoke-test the JS bundle and the glibc x64 binary
         run: |
+          bun dist/xmac.js --version
           ./dist/xmac-linux-x64 --version
           ./dist/xmac-linux-x64 --help > /dev/null
 
       # Bun's musl builds link libstdc++/libgcc dynamically, so the binary has
       # the same runtime requirement as Bun itself on Alpine: apk add libstdc++.
-      - name: Smoke-test the musl binary (Alpine container)
+      - name: Smoke-test the musl x64 binary (Alpine container)
         run: |
           docker run --rm -v "$PWD/dist:/dist" alpine:latest \
             sh -ec 'apk add --no-cache --quiet libstdc++ libgcc && /dist/xmac-linux-x64-musl --version'
 
+      # The arm64 binaries cannot run on the x64 runner; verify they are at
+      # least well-formed aarch64 ELF executables of a plausible size.
+      - name: Verify the arm64 binaries are aarch64 ELF
+        run: |
+          for f in dist/xmac-linux-arm64 dist/xmac-linux-arm64-musl; do
+            file "$f"
+            file "$f" | grep -q "ELF 64-bit LSB.*ARM aarch64" || { echo "::error::$f is not an aarch64 ELF"; exit 1; }
+            test "$(stat -c%s "$f")" -gt 50000000 || { echo "::error::$f is implausibly small"; exit 1; }
+          done
+
       - name: Checksums
         working-directory: dist
-        run: sha256sum xmac-* > SHA256SUMS
+        run: sha256sum xmac.js xmac-* > SHA256SUMS
 
       - name: Publish build release (every push to main)
         if: github.ref == 'refs/heads/main'
@@ -60,7 +77,7 @@ jobs:
             --title "$version" \
             --latest \
             --notes "Automated build \`$version\` of commit ${GITHUB_SHA}." \
-            dist/xmac-linux-x64 dist/xmac-linux-x64-musl dist/SHA256SUMS
+            dist/xmac.js dist/xmac-linux-* dist/SHA256SUMS
 
       - name: Versioned release (tag push)
         if: startsWith(github.ref, 'refs/tags/v')
@@ -70,4 +87,4 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             --title "$GITHUB_REF_NAME" \
             --generate-notes \
-            dist/xmac-linux-x64 dist/xmac-linux-x64-musl dist/SHA256SUMS
+            dist/xmac.js dist/xmac-linux-* dist/SHA256SUMS
