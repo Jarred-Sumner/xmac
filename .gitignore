@@ -1,0 +1,5 @@
+.xmac-cache/
+xmac-sdk/
+node_modules/
+*.pkg
+dist/

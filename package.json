@@ -1,0 +1,48 @@
+{
+  "name": "xmac",
+  "version": "0.1.0",
+  "description": "Download and extract macOS SDKs from Apple's public CDN for cross-compilation, without redistributing the SDK. Like xwin, but for macOS.",
+  "keywords": [
+    "ci",
+    "clang",
+    "command-line-tools",
+    "cross-compile",
+    "darwin",
+    "macos",
+    "sdk",
+    "xcode"
+  ],
+  "homepage": "https://github.com/jarred-sumner/xmac#readme",
+  "bugs": "https://github.com/jarred-sumner/xmac/issues",
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jarred-sumner/xmac.git"
+  },
+  "bin": {
+    "xmac": "./xmac.ts"
+  },
+  "type": "module",
+  "scripts": {
+    "xmac": "bun xmac.ts",
+    "build": "bun build --compile --minify ./xmac.ts --outfile dist/xmac",
+    "build:linux-x64": "bun build --compile --minify --target=bun-linux-x64 ./xmac.ts --outfile dist/xmac-linux-x64",
+    "build:linux-x64-musl": "bun build --compile --minify --target=bun-linux-x64-musl ./xmac.ts --outfile dist/xmac-linux-x64-musl",
+    "build:all": "bun run build:linux-x64 && bun run build:linux-x64-musl",
+    "test": "bun test ./test",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "check": "bun run typecheck && bun run lint && bun run fmt:check"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14",
+    "oxfmt": "^0.51.0",
+    "oxlint": "^1.66.0",
+    "typescript": "^6"
+  },
+  "engines": {
+    "bun": ">=1.1.0"
+  }
+}

@@ -1,0 +1,67 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly canary against Apple's live catalog: catches format/catalog drift.
+    - cron: "17 6 * * 1"
+
+jobs:
+  cross-compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Everything xmac and the smoke tests need:
+      #   xz-utils bzip2 . extraction (pbzx chunks / xar entries)
+      #   clang lld ...... cross-compiler + ld64.lld Mach-O linker
+      #   llvm ........... llvm-ar/ranlib/lipo/nm/strip for archives & fat binaries
+      #   cmake ninja .... toolchain-file integration test
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang lld llvm cmake ninja-build xz-utils bzip2
+          # Some distros only ship versioned lld binaries; make sure the
+          # unversioned ld64.lld the wrappers look for exists.
+          if ! command -v ld64.lld >/dev/null; then
+            v="$(compgen -c ld64.lld- | sort -V | tail -1)"
+            test -n "$v" && sudo ln -s "$(command -v "$v")" /usr/local/bin/ld64.lld
+          fi
+
+      - name: Preflight — verify every required tool is present
+        run: |
+          set -e
+          for tool in bun xz bzip2 gzip clang clang++ ld64.lld llvm-ar llvm-ranlib llvm-lipo cmake ninja; do
+            if ! command -v "$tool" >/dev/null; then
+              echo "::error::required tool '$tool' is not on PATH"
+              exit 1
+            fi
+            printf '%-14s %s\n' "$tool" "$(command -v "$tool")"
+          done
+          clang --version | head -1
+          ld64.lld --version || true
+          bun --version
+
+      - name: Typecheck, lint, format check
+        run: |
+          bun install --frozen-lockfile
+          bun run check
+
+      - name: List available SDKs
+        run: bun xmac.ts list
+
+      - name: Splat the latest SDK
+        run: bun xmac.ts splat --accept-license --output ./xmac-sdk
+
+      - name: Smoke tests (compile permutation matrix)
+        run: bun test ./test
+
+      - name: Standalone binary builds
+        run: bun build --compile --minify ./xmac.ts --outfile dist/xmac && ./dist/xmac --version
