@@ -16,7 +16,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: canary
+          bun-version: latest
 
       # Everything xmac and the smoke tests need:
       #   xz-utils bzip2 .... extraction (pbzx chunks / xar entries)
