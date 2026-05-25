@@ -29,8 +29,9 @@ function cmakeToolchain(filePath: string, sdkRel: string, archs: string[], minOs
 #
 #   cmake -B build -G Ninja --toolchain ${filePath}
 #
-# Requirements on the build host: clang and lld (for ld64.lld). Any
-# clang >= 13 works; 15+ recommended. Override the compiler with
+# Requirements on the build host: clang and lld (for ld64.lld). C/ObjC work
+# with any clang >= 13; C++ needs a clang recent enough for this SDK's libc++
+# headers (the macOS 26 SDK requires clang >= 19). Override the compiler with
 # -DXMAC_CLANG=/path/to/clang if the default is not what you want.
 
 set(CMAKE_SYSTEM_NAME Darwin)

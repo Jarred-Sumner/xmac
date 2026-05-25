@@ -19,25 +19,30 @@ jobs:
           bun-version: latest
 
       # Everything xmac and the smoke tests need:
-      #   xz-utils bzip2 . extraction (pbzx chunks / xar entries)
-      #   clang lld ...... cross-compiler + ld64.lld Mach-O linker
-      #   llvm ........... llvm-ar/ranlib/lipo/nm/strip for archives & fat binaries
-      #   cmake ninja .... toolchain-file integration test
+      #   xz-utils bzip2 .... extraction (pbzx chunks / xar entries)
+      #   clang lld ......... cross-compiler + ld64.lld Mach-O linker
+      #   llvm .............. llvm-ar/ranlib/lipo/nm/strip for archives & fat binaries
+      #   cmake ninja ....... toolchain-file integration test
+      #
+      # Ubuntu 24.04 ships clang 18, but the macOS 26 SDK's libc++ headers use
+      # __builtin_ctzg/__builtin_clzg, which need clang >= 19. Install a recent
+      # LLVM from apt.llvm.org instead of the distro default.
       - name: Install toolchain
+        env:
+          LLVM_VERSION: "21"
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            clang lld llvm cmake ninja-build xz-utils bzip2
-          # Ubuntu's lld/llvm packages only create unversioned symlinks for
-          # *some* tools (llvm-ar yes, llvm-lipo no). Create the missing ones
-          # from the highest versioned binary available.
-          for tool in ld64.lld llvm-ar llvm-ranlib llvm-lipo llvm-nm llvm-strip llvm-install-name-tool; do
-            if ! command -v "$tool" >/dev/null; then
-              v="$(compgen -c "$tool-" | grep -E "^${tool}-[0-9]+$" | sort -V | tail -1)"
-              if [ -n "$v" ]; then
-                sudo ln -sf "$(command -v "$v")" "/usr/local/bin/$tool"
-                echo "symlinked $tool -> $v"
-              fi
+            cmake ninja-build xz-utils bzip2
+          wget -qO /tmp/llvm.sh https://apt.llvm.org/llvm.sh
+          sudo bash /tmp/llvm.sh "$LLVM_VERSION"
+          sudo apt-get install -y --no-install-recommends "llvm-$LLVM_VERSION" "lld-$LLVM_VERSION"
+          # apt.llvm.org installs versioned binaries only; create the
+          # unversioned names that xmac's wrappers and CMake toolchain expect.
+          for tool in clang clang++ ld64.lld llvm-ar llvm-ranlib llvm-lipo llvm-nm llvm-strip llvm-install-name-tool; do
+            if ! command -v "$tool" >/dev/null && command -v "$tool-$LLVM_VERSION" >/dev/null; then
+              sudo ln -sf "$(command -v "$tool-$LLVM_VERSION")" "/usr/local/bin/$tool"
+              echo "symlinked $tool -> $tool-$LLVM_VERSION"
             fi
           done
 

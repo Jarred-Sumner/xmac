@@ -83,8 +83,11 @@ Either way you also need on `PATH`:
 
 - `xz` and `bzip2` for extraction (`apt-get install xz-utils bzip2` — already
   present on most images)
-- `clang` ≥ 13 and `lld` (for `ld64.lld`) to actually cross-compile
-  (`apt-get install clang lld`)
+- `clang` and `lld` (for `ld64.lld`) to actually cross-compile. C and
+  Objective-C work with any clang ≥ 13; **C++ against the newest SDKs needs
+  clang ≥ 19** because Apple's libc++ headers track Apple's own clang (the
+  macOS 26 SDK uses `__builtin_ctzg`, added in clang 19). Ubuntu 24.04's
+  default clang is 18 — get a newer one from [apt.llvm.org](https://apt.llvm.org).
 
 ## 🚀 Usage
 
