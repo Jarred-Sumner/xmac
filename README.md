@@ -50,6 +50,14 @@ Because every machine downloads the SDK from Apple itself, you never
 redistribute Apple's SDK — the same legal posture that makes xwin usable in
 CI. You still have to accept Apple's license terms (`--accept-license`).
 
+> [!NOTE]
+> **This entire project is AI-generated** — the code, the tests, and this
+> README were written by an AI (Claude), directed and reviewed by a human. It
+> parses Apple's xar/pbzx/cpio container formats from scratch and is used in
+> [Bun](https://github.com/oven-sh/bun)'s CI to cross-compile macOS binaries
+> from Linux, but you should review it with the same skepticism you'd apply to
+> any new dependency before trusting it in your own build.
+
 ## 📦 Install
 
 **Prebuilt binary** (no runtime needed) — from the [rolling `latest`
